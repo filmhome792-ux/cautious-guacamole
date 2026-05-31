@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Film Home</title>
+
+<style>
+body {
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family: 'IRANSans', sans-serif;
+}
+
+/* هدر مینیمال لوکس */
+header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 20px;
+    background:#000;
+    border-bottom:1px solid rgba(229,9,20,0.25);
+}
+.logo {
+    font-size:22px;
+    font-weight:600;
+    color:#e50914;
+    cursor:pointer;
+    letter-spacing:1px;
+}
+
+/* لینک‌ها */
+nav a {
+    margin-left:15px;
+    color:#ddd;
+    text-decoration:none;
+    font-size:14px;
+    transition:0.3s;
+}
+nav a:hover {
+    color:#e50914;
+}
+
+/* صفحات */
+.page {
+    display:none;
+    padding:20px;
+}
+.active {
+    display:block;
+}
+
+/* ورودی‌ها */
+input {
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #222;
+    background:#0a0a0a;
+    color:#fff;
+    transition:0.3s;
+}
+input:focus {
+    border-color:#e50914;
+}
+
+/* دکمه‌ها */
+button {
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #e50914;
+    background:transparent;
+    color:#e50914;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+button:hover {
+    background:#e50914;
+    color:#fff;
+}
+
+/* کارت فیلم مینیمال */
+.card {
+    background:#0a0a0a;
+    padding:12px;
+    margin:12px 0;
+    border-radius:8px;
+    border:1px solid #111;
+    transition:0.3s;
+    cursor:pointer;
+}
+.card:hover {
+    border-color:#e50914;
+}
+.card img {
+    width:100%;
+    border-radius:6px;
+}
+
+/* ویدیو */
+video {
+    width:100%;
+    border-radius:8px;
+    margin-top:10px;
+    background:#111;
+}
+
+/* عنوان‌ها */
+h2, h3 {
+    color:#e50914;
+    font-weight:500;
+    margin-bottom:10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo" onclick="showPage('home')">Film Home</div>
+    <nav>
+        <a onclick="showPage('home')">خانه</a>
+        <a onclick="openAdmin()">مدیریت</a>
+    </nav>
+</header>
+
+<!-- صفحه اصلی -->
+<div id="home" class="page active">
+    <h2>جستجوی فیلم</h2>
+    <input id="search" placeholder="جستجو...">
+
+    <h2>فیلم‌ها</h2>
+    <div id="movieList"></div>
+</div>
+
+<!-- صفحه مدیریت -->
+<div id="admin" class="page">
+    <h2>پنل مدیریت</h2>
+
+    <input id="title" placeholder="نام فیلم">
+    <input id="image" placeholder="لینک عکس">
+    <input id="desc" placeholder="توضیحات">
+    <input id="video" placeholder="لینک ویدیو (اختیاری)">
+    <button onclick="addMovie()">افزودن فیلم</button>
+
+    <h3>لیست فیلم‌ها</h3>
+    <div id="adminList"></div>
+
+    <h3>تغییر رمز مدیریت</h3>
+    <input id="newPass" placeholder="رمز جدید">
+    <button onclick="changePass()">ذخیره رمز جدید</button>
+</div>
+
+<!-- صفحه جزئیات -->
+<div id="details" class="page">
+    <button onclick="showPage('home')">← بازگشت</button>
+    <h2 id="d_title"></h2>
+    <img id="d_image">
+    <p id="d_desc"></p>
+    <button onclick="showPage('player')">▶ پخش فیلم</button>
+</div>
+
+<!-- صفحه پخش -->
+<div id="player" class="page">
+    <button onclick="showPage('details')">← بازگشت</button>
+    <h2 id="p_title"></h2>
+    <video id="p_video" controls></video>
+</div>
+
+<script>
+let movies = JSON.parse(localStorage.getItem("movies")) || [];
+let currentMovie = 0;
+
+/* رمز مدیریت قابل تغییر */
+let adminPass = localStorage.getItem("adminPass") || "1234";
+
+function save() {
+    localStorage.setItem("movies", JSON.stringify(movies));
+}
+
+function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+
+    if (id === "home") loadMovies();
+    if (id === "admin") loadAdmin();
+    if (id === "details") loadDetails();
+    if (id === "player") loadPlayer();
+}
+
+function loadMovies() {
+    const list = document.getElementById("movieList");
+    list.innerHTML = "";
+
+    movies.forEach((m, i) => {
+        list.innerHTML += `
+            <div class="card" onclick="openDetails(${i})">
+                <img src="${m.image}">
+                <h3>${m.title}</h3>
+            </div>
+        `;
+    });
+}
+
+function openDetails(i) {
+    currentMovie = i;
+    showPage("details");
+}
+
+function loadDetails() {
+    const m = movies[currentMovie];
+    document.getElementById("d_title").textContent = m.title;
+    document.getElementById("d_image").src = m.image;
+    document.getElementById("d_desc").textContent = m.desc;
+}
+
+function loadPlayer() {
+    const m = movies[currentMovie];
+    document.getElementById("p_title").textContent = m.title;
+    document.getElementById("p_video").src = m.video || "";
+}
+
+function openAdmin() {
+    const pass = prompt("رمز مدیریت:");
+    if (pass === adminPass) showPage("admin");
+    else alert("رمز اشتباه است");
+}
+
+function addMovie() {
+    const title = document.getElementById("title").value;
+    const image = document.getElementById("image").value;
+    const desc = document.getElementById("desc").value;
+    const video = document.getElementById("video").value;
+
+    if (!title || !image) return alert("نام و عکس اجباری است");
+
+    movies.push({ title, image, desc, video });
+    save();
+    loadAdmin();
+}
+
+function loadAdmin() {
+    const list = document.getElementById("adminList");
+    list.innerHTML = "";
+
+    movies.forEach((m, i) => {
+        list.innerHTML += `
+            <div class="card">
+                <h3>${m.title}</h3>
+                <button onclick="deleteMovie(${i})">حذف</button>
+            </div>
+        `;
+    });
+}
+
+function deleteMovie(i) {
+    movies.splice(i, 1);
+    save();
+    loadAdmin();
+}
+
+function changePass() {
+    const np = document.getElementById("newPass").value.trim();
+    if (!np) return alert("رمز جدید را وارد کن");
+    adminPass = np;
+    localStorage.setItem("adminPass", np);
+    alert("رمز با موفقیت تغییر کرد");
+    document.getElementById("newPass").value = "";
+}
+
+document.getElementById("search").addEventListener("input", function() {
+    const value = this.value.toLowerCase();
+    const list = document.getElementById("movieList");
+    list.innerHTML = "";
+
+    movies
+        .filter(m => m.title.toLowerCase().includes(value))
+        .forEach((m, i) => {
+            list.innerHTML += `
+                <div class="card" onclick="openDetails(${i})">
+                    <img src="${m.image}">
+                    <h3>${m.title}</h3>
+                </div>
+            `;
+        });
+});
+</script>
+
+</body>
+</html>
